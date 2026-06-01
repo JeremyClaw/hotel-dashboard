@@ -45,8 +45,8 @@ export default async function SettingsPage({
             </div>
             <p className="text-slate-400 text-sm">
               {hasCloudbedsToken
-                ? 'Your hotel data is syncing from Cloudbeds. All dashboard stats reflect live data.'
-                : 'Connect your Cloudbeds account to pull real hotel stats into this dashboard.'}
+                ? "Your hotel data is syncing from Cloudbeds. All dashboard stats reflect live data."
+                : "Connect your Cloudbeds account to pull real hotel stats into this dashboard."}
             </p>
           </div>
           <a
