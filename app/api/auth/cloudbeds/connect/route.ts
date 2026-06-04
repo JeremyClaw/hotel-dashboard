@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
-import { getOAuthUrl } from '@/lib/cloudbeds'
 
+// OAuth flow replaced by API key authentication.
 export async function GET() {
-  const url = getOAuthUrl()
-  return NextResponse.redirect(url)
+  return NextResponse.redirect(new URL('/settings', process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'))
 }

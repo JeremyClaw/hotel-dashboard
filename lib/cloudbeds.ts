@@ -1,95 +1,66 @@
 /**
  * Cloudbeds API Client
- * OAuth 2.0 authentication + data fetching
+ * API key authentication — Bearer token in Authorization header
  */
 
-const CLOUDBEDS_AUTH_URL = 'https://hotels.cloudbeds.com/api/v1.2/oauth'
 const CLOUDBEDS_API_URL = 'https://hotels.cloudbeds.com/api/v1.2'
 
-export function getOAuthUrl(): string {
-  const params = new URLSearchParams({
-    client_id: process.env.CLOUDBEDS_CLIENT_ID!,
-    redirect_uri: process.env.CLOUDBEDS_REDIRECT_URI!,
-    response_type: 'code',
-    scope: 'read:hotel read:reservations read:guests read:housekeeping read:revenue',
-  })
-  return `${CLOUDBEDS_AUTH_URL}/authorize?${params}`
+export const PROPERTY_ID = '133956142043362'
+
+function apiKey() {
+  return process.env.CLOUDBEDS_API_KEY!
 }
 
-export async function exchangeCodeForToken(code: string) {
-  const res = await fetch(`${CLOUDBEDS_AUTH_URL}/access_token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      client_id: process.env.CLOUDBEDS_CLIENT_ID!,
-      client_secret: process.env.CLOUDBEDS_CLIENT_SECRET!,
-      redirect_uri: process.env.CLOUDBEDS_REDIRECT_URI!,
-      code,
-    }),
-  })
-  if (!res.ok) throw new Error(`Token exchange failed: ${await res.text()}`)
-  return res.json()
-}
+export async function cloudbedsGet(endpoint: string, params?: Record<string, string>) {
+  const url = new URL(`${CLOUDBEDS_API_URL}${endpoint}`)
+  url.searchParams.set('propertyID', PROPERTY_ID)
+  if (params) {
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
+  }
 
-export async function refreshAccessToken(refreshToken: string) {
-  const res = await fetch(`${CLOUDBEDS_AUTH_URL}/access_token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'refresh_token',
-      client_id: process.env.CLOUDBEDS_CLIENT_ID!,
-      client_secret: process.env.CLOUDBEDS_CLIENT_SECRET!,
-      refresh_token: refreshToken,
-    }),
+  const res = await fetch(url.toString(), {
+    headers: { Authorization: `Bearer ${apiKey()}` },
+    next: { revalidate: 0 },
   })
-  if (!res.ok) throw new Error(`Token refresh failed: ${await res.text()}`)
-  return res.json()
-}
 
-export async function cloudbedsGet(endpoint: string, accessToken: string) {
-  const res = await fetch(`${CLOUDBEDS_API_URL}${endpoint}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-  })
   if (!res.ok) {
     const text = await res.text()
     throw new Error(`Cloudbeds API error ${res.status}: ${text}`)
   }
-  return res.json()
+
+  const json = await res.json()
+  if (!json.success) throw new Error(`Cloudbeds error: ${JSON.stringify(json)}`)
+  return json.data
 }
 
-// ── Data fetching helpers ─────────────────────────────────────────────────
+// ── Endpoints ────────────────────────────────────────────────────────────────
 
-export async function getProperties(accessToken: string) {
-  return cloudbedsGet('/getHotels', accessToken)
+export async function getProperty() {
+  const data = await cloudbedsGet('/getHotels')
+  return Array.isArray(data) ? data[0] : data
 }
 
-export async function getReservations(
-  accessToken: string,
-  params: {
-    propertyID?: string
-    checkInFrom?: string
-    checkInTo?: string
-    checkOutFrom?: string
-    checkOutTo?: string
-    status?: string
-    pageSize?: number
-    pageNumber?: number
-  }
-) {
-  const query = new URLSearchParams(params as Record<string, string>)
-  return cloudbedsGet(`/getReservations?${query}`, accessToken)
+export async function getDashboard(date: string) {
+  return cloudbedsGet('/getDashboard', { dateStart: date, dateEnd: date })
 }
 
-export async function getDashboardStats(
-  accessToken: string,
-  propertyID: string,
-  dateStart: string,
-  dateEnd: string
-) {
-  const query = new URLSearchParams({ propertyID, dateStart, dateEnd })
-  return cloudbedsGet(`/getDashboard?${query}`, accessToken)
+export async function getReservations(params: {
+  checkInFrom?: string
+  checkInTo?: string
+  checkOutFrom?: string
+  checkOutTo?: string
+  status?: string
+  pageSize?: string
+  pageNumber?: string
+}) {
+  return cloudbedsGet('/getReservations', params as Record<string, string>)
+}
+
+export async function getReservationDetail(reservationID: string) {
+  const res = await fetch(
+    `${CLOUDBEDS_API_URL}/getReservation?propertyID=${PROPERTY_ID}&reservationID=${reservationID}`,
+    { headers: { Authorization: `Bearer ${apiKey()}` }, next: { revalidate: 0 } }
+  )
+  const json = await res.json()
+  return json.data
 }
