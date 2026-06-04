@@ -34,9 +34,10 @@ export function trendArrow(pct: number | null) {
   return '→'
 }
 
-// Cloudbeds reservation revenue — field is 'balance' in getReservations list response
-// (grandTotal/total fallbacks retained for forward-compatibility)
+// Cloudbeds reservation revenue — 'balance' is the outstanding amount in the list API.
+// Positive = guest owes property. Negative = OTA has pre-paid (virtual credit card).
+// We take Math.abs to get the booking value regardless of payment direction.
 export function resvTotal(r: { balance?: string | number | null; grandTotal?: string | number | null; total?: string | number | null }): number {
   const raw = r.balance ?? r.grandTotal ?? r.total ?? 0
-  return parseFloat(String(raw)) || 0
+  return Math.abs(parseFloat(String(raw)) || 0)
 }
