@@ -1,5 +1,5 @@
 import StatCard from '@/components/stats/StatCard'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, resvTotal } from '@/lib/utils'
 import { getReservations } from '@/lib/cloudbeds'
 import { format, startOfMonth } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
@@ -8,7 +8,7 @@ const TZ = 'Africa/Johannesburg'
 const tod = () => format(toZonedTime(new Date(), TZ), 'yyyy-MM-dd')
 const mtd = () => format(toZonedTime(startOfMonth(new Date()), TZ), 'yyyy-MM-dd')
 
-type Resv = { total?: string; sourceName?: string; status?: string }
+type Resv = { grandTotal?: string | number; total?: string | number; sourceName?: string; status?: string }
 
 async function getChannelData() {
   const resvMTD = await getReservations({ checkInFrom: mtd(), checkInTo: tod(), pageSize: '200' })
@@ -19,7 +19,7 @@ async function getChannelData() {
     const ch = r.sourceName || 'Direct'
     if (!channelMap[ch]) channelMap[ch] = { count: 0, revenue: 0, cancelled: 0 }
     channelMap[ch].count++
-    channelMap[ch].revenue += parseFloat(r.total ?? '0') || 0
+    channelMap[ch].revenue += resvTotal(r)
     if (r.status?.toLowerCase() === 'cancelled') channelMap[ch].cancelled++
   })
 

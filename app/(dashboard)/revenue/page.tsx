@@ -1,5 +1,5 @@
 import StatCard from '@/components/stats/StatCard'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, resvTotal } from '@/lib/utils'
 import { getDashboard, getReservations } from '@/lib/cloudbeds'
 import { format, subDays, startOfMonth } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
@@ -16,8 +16,9 @@ type Resv = {
   status?: string
   checkIn?: string
   checkOut?: string
-  total?: string
-  balance?: string
+  grandTotal?: string | number
+  total?: string | number
+  balance?: string | number
   sourceName?: string
 }
 
@@ -46,8 +47,8 @@ async function getRevenueData() {
   const todayArr: Resv[] = Array.isArray(resvToday) ? resvToday : []
   const mtdArr: Resv[]   = Array.isArray(resvMTD)   ? resvMTD   : []
 
-  const revenueToday = todayArr.reduce((s, r) => s + (parseFloat(r.total ?? '0') || 0), 0)
-  const revenueMTD   = mtdArr.reduce((s, r)   => s + (parseFloat(r.total ?? '0') || 0), 0)
+  const revenueToday = todayArr.reduce((s, r) => s + resvTotal(r), 0)
+  const revenueMTD   = mtdArr.reduce((s, r)   => s + resvTotal(r), 0)
   const adr          = mtdArr.length > 0 ? revenueMTD / mtdArr.length : 0
   const occupancy    = dt.percentageOccupied || 0
   const occYest      = dy.percentageOccupied || 0
@@ -165,7 +166,7 @@ export default async function RevenuePage() {
                             </span>
                           </td>
                           <td className="py-3 text-right font-mono font-medium text-white">
-                            {formatCurrency(parseFloat(r.total ?? '0') || 0)}
+                            {formatCurrency(resvTotal(r))}
                           </td>
                         </tr>
                       )

@@ -33,3 +33,9 @@ export function trendArrow(pct: number | null) {
   if (pct < 0) return '↓'
   return '→'
 }
+
+// Cloudbeds reservation total — try grandTotal first, fall back to total
+export function resvTotal(r: { grandTotal?: string | number | null; total?: string | number | null }): number {
+  const raw = r.grandTotal ?? r.total ?? 0
+  return parseFloat(String(raw)) || 0
+}

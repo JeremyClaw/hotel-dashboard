@@ -1,5 +1,5 @@
 import StatCard from '@/components/stats/StatCard'
-import { formatCurrency, formatPercent } from '@/lib/utils'
+import { formatCurrency, formatPercent, resvTotal } from '@/lib/utils'
 import { getDashboard, getReservations } from '@/lib/cloudbeds'
 import { format, subDays, startOfMonth } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
@@ -9,7 +9,7 @@ const tod = () => format(toZonedTime(new Date(), TZ), 'yyyy-MM-dd')
 const yest = () => format(toZonedTime(subDays(new Date(), 1), TZ), 'yyyy-MM-dd')
 const mtd = () => format(toZonedTime(startOfMonth(new Date()), TZ), 'yyyy-MM-dd')
 
-type Resv = { total?: string; sourceName?: string }
+type Resv = { grandTotal?: string | number; total?: string | number; sourceName?: string }
 type Dash = {
   percentageOccupied?: number
   roomsOccupied?: number
@@ -34,8 +34,8 @@ async function getStats() {
   const resvTodayArr: Resv[] = Array.isArray(resvToday) ? resvToday : []
   const resvMTDArr: Resv[]   = Array.isArray(resvMTD)   ? resvMTD   : []
 
-  const revenueToday = resvTodayArr.reduce((s, r) => s + (parseFloat(r.total ?? '0') || 0), 0)
-  const revenueMTD   = resvMTDArr.reduce((s, r) => s + (parseFloat(r.total ?? '0') || 0), 0)
+  const revenueToday = resvTodayArr.reduce((s, r) => s + resvTotal(r), 0)
+  const revenueMTD   = resvMTDArr.reduce((s, r) => s + resvTotal(r), 0)
   const adr          = resvMTDArr.length > 0 ? revenueMTD / resvMTDArr.length : 0
   const occupancy    = dt.percentageOccupied || 0
   const revpar       = adr * occupancy / 100
@@ -45,7 +45,7 @@ async function getStats() {
     const ch = r.sourceName || 'Direct'
     if (!channelMap[ch]) channelMap[ch] = { count: 0, revenue: 0 }
     channelMap[ch].count++
-    channelMap[ch].revenue += parseFloat(r.total ?? '0') || 0
+    channelMap[ch].revenue += resvTotal(r)
   })
   const channels = Object.entries(channelMap)
     .map(([name, d]) => ({ name, count: d.count, revenue: d.revenue }))

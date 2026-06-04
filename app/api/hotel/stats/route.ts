@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getDashboard, getReservations } from '@/lib/cloudbeds'
+import { resvTotal } from '@/lib/utils'
 import { format, subDays, startOfMonth } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
 
@@ -23,13 +24,12 @@ async function getOverviewStats() {
     getReservations({ checkInFrom: mtdStart(), checkInTo: today(), pageSize: '200' }),
   ])
 
-  // Revenue: sum balanceDetailed.grandTotal from reservations
-  type Resv = { total?: string; sourceName?: string }
+  type Resv = { grandTotal?: string | number; total?: string | number; sourceName?: string }
   const resvTodayArr: Resv[] = Array.isArray(resvToday) ? resvToday : []
   const resvMTDArr: Resv[]   = Array.isArray(resvMTD)   ? resvMTD   : []
 
-  const revenueToday = resvTodayArr.reduce((sum, r) => sum + (parseFloat(r.total ?? '0') || 0), 0)
-  const revenueMTD   = resvMTDArr.reduce((sum, r) => sum + (parseFloat(r.total ?? '0') || 0), 0)
+  const revenueToday = resvTodayArr.reduce((sum, r) => sum + resvTotal(r), 0)
+  const revenueMTD   = resvMTDArr.reduce((sum, r) => sum + resvTotal(r), 0)
 
   const roomsSoldMTD = resvMTDArr.length
   const adr          = roomsSoldMTD > 0 ? revenueMTD / roomsSoldMTD : 0
@@ -43,7 +43,7 @@ async function getOverviewStats() {
     const ch = r.sourceName || 'Direct'
     if (!channelMap[ch]) channelMap[ch] = { count: 0, revenue: 0 }
     channelMap[ch].count++
-    channelMap[ch].revenue += parseFloat(r.total ?? '0') || 0
+    channelMap[ch].revenue += resvTotal(r)
   })
   const channels = Object.entries(channelMap)
     .map(([name, d]) => ({ name, count: d.count, revenue: d.revenue }))

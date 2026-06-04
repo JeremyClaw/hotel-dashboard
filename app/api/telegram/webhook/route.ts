@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDashboard, getReservations } from '@/lib/cloudbeds'
-import { formatCurrency, formatPercent } from '@/lib/utils'
+import { formatCurrency, formatPercent, resvTotal } from '@/lib/utils'
 import { format, subDays, startOfMonth } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
 
@@ -22,7 +22,7 @@ type Dash = {
   inHouse?: number
   guestsInHouse?: number
 }
-type Resv = { total?: string; sourceName?: string }
+type Resv = { grandTotal?: string | number; total?: string | number; sourceName?: string }
 
 async function sendMessage(chatId: number, text: string) {
   if (!BOT_TOKEN) return
@@ -44,7 +44,7 @@ async function fetchOverview() {
   const dy = dashYest as Dash
   const arr: Resv[] = Array.isArray(resvMTD) ? resvMTD : []
 
-  const revenueMTD = arr.reduce((s, r) => s + (parseFloat(r.total ?? '0') || 0), 0)
+  const revenueMTD = arr.reduce((s, r) => s + (resvTotal(r)), 0)
   const adr        = arr.length > 0 ? revenueMTD / arr.length : 0
   const occupancy  = dt.percentageOccupied || 0
   const revpar     = adr * occupancy / 100
@@ -56,7 +56,7 @@ async function fetchOverview() {
     const ch = r.sourceName || 'Direct'
     if (!channelMap[ch]) channelMap[ch] = { count: 0, revenue: 0 }
     channelMap[ch].count++
-    channelMap[ch].revenue += parseFloat(r.total ?? '0') || 0
+    channelMap[ch].revenue += resvTotal(r)
   })
 
   const channels = Object.entries(channelMap)
@@ -157,7 +157,7 @@ Yesterday: ${formatPercent(occY)}`)
           getReservations({ checkInFrom: mtd(), checkInTo: tod(), pageSize: '200' }),
         ])
         const arr: Resv[] = Array.isArray(resvMTD) ? resvMTD : []
-        const total  = arr.reduce((s, r) => s + (parseFloat(r.total ?? '0') || 0), 0)
+        const total  = arr.reduce((s, r) => s + (resvTotal(r)), 0)
         const adr    = arr.length > 0 ? total / arr.length : 0
         const revpar = adr * (dt.percentageOccupied || 0) / 100
         await sendMessage(chatId, `💰 <b>Revenue MTD — Fools Inn</b>
@@ -177,7 +177,7 @@ RevPAR: ${formatCurrency(revpar)}`)
           const ch = r.sourceName || 'Direct'
           if (!channelMap[ch]) channelMap[ch] = { count: 0, revenue: 0 }
           channelMap[ch].count++
-          channelMap[ch].revenue += parseFloat(r.total ?? '0') || 0
+          channelMap[ch].revenue += resvTotal(r)
         })
         const lines = Object.entries(channelMap)
           .sort((a, b) => b[1].revenue - a[1].revenue)
