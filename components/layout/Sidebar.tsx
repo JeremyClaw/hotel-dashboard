@@ -9,6 +9,7 @@ import {
   DollarSign,
   Building2,
   BarChart3,
+  MessageSquare,
   Settings,
   LogOut,
 } from 'lucide-react'
@@ -19,6 +20,7 @@ const nav = [
   { href: '/revenue',    label: 'Revenue',     icon: DollarSign },
   { href: '/properties', label: 'Properties',  icon: Building2 },
   { href: '/channels',   label: 'Channels',    icon: BarChart3 },
+  { href: '/ask',        label: 'Ask',         icon: MessageSquare },
   { href: '/settings',   label: 'Settings',    icon: Settings },
 ]
 
