@@ -9,7 +9,7 @@ const tod = () => format(toZonedTime(new Date(), TZ), 'yyyy-MM-dd')
 const yest = () => format(toZonedTime(subDays(new Date(), 1), TZ), 'yyyy-MM-dd')
 const mtd = () => format(toZonedTime(startOfMonth(new Date()), TZ), 'yyyy-MM-dd')
 
-type Resv = { grandTotal?: string | number; total?: string | number; sourceName?: string }
+type Resv = { balance?: string | number; grandTotal?: string | number; total?: string | number; sourceName?: string }
 type Dash = {
   percentageOccupied?: number
   roomsOccupied?: number

@@ -14,11 +14,13 @@ type Resv = {
   reservationID?: string
   guestName?: string
   status?: string
-  checkIn?: string
+  startDate?: string   // Cloudbeds uses startDate/endDate in list response
+  endDate?: string
+  checkIn?: string     // fallback aliases
   checkOut?: string
+  balance?: string | number
   grandTotal?: string | number
   total?: string | number
-  balance?: string | number
   sourceName?: string
 }
 
@@ -56,7 +58,7 @@ async function getRevenueData() {
   const revparYest   = adr * occYest / 100
 
   const recentResvs = [...mtdArr]
-    .sort((a, b) => (b.checkIn ?? '').localeCompare(a.checkIn ?? ''))
+    .sort((a, b) => (b.startDate ?? b.checkIn ?? '').localeCompare(a.startDate ?? a.checkIn ?? ''))
     .slice(0, 15)
 
   return {
@@ -157,8 +159,8 @@ export default async function RevenuePage() {
                       return (
                         <tr key={r.reservationID ?? i} className="text-slate-300 hover:bg-slate-700/20 transition-colors">
                           <td className="py-3 font-medium text-white">{r.guestName || '—'}</td>
-                          <td className="py-3 text-slate-400 hidden sm:table-cell font-mono text-xs">{r.checkIn || '—'}</td>
-                          <td className="py-3 text-slate-400 hidden md:table-cell font-mono text-xs">{r.checkOut || '—'}</td>
+                          <td className="py-3 text-slate-400 hidden sm:table-cell font-mono text-xs">{r.startDate || r.checkIn || '—'}</td>
+                          <td className="py-3 text-slate-400 hidden md:table-cell font-mono text-xs">{r.endDate || r.checkOut || '—'}</td>
                           <td className="py-3 text-slate-400 hidden lg:table-cell">{r.sourceName || 'Direct'}</td>
                           <td className="py-3">
                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${badge.cls}`}>

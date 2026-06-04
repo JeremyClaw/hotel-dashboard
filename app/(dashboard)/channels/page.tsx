@@ -8,7 +8,7 @@ const TZ = 'Africa/Johannesburg'
 const tod = () => format(toZonedTime(new Date(), TZ), 'yyyy-MM-dd')
 const mtd = () => format(toZonedTime(startOfMonth(new Date()), TZ), 'yyyy-MM-dd')
 
-type Resv = { grandTotal?: string | number; total?: string | number; sourceName?: string; status?: string }
+type Resv = { balance?: string | number; grandTotal?: string | number; total?: string | number; sourceName?: string; status?: string }
 
 async function getChannelData() {
   const resvMTD = await getReservations({ checkInFrom: mtd(), checkInTo: tod(), pageSize: '200' })

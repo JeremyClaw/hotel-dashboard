@@ -24,7 +24,7 @@ async function getOverviewStats() {
     getReservations({ checkInFrom: mtdStart(), checkInTo: today(), pageSize: '200' }),
   ])
 
-  type Resv = { grandTotal?: string | number; total?: string | number; sourceName?: string }
+  type Resv = { balance?: string | number; grandTotal?: string | number; total?: string | number; sourceName?: string }
   const resvTodayArr: Resv[] = Array.isArray(resvToday) ? resvToday : []
   const resvMTDArr: Resv[]   = Array.isArray(resvMTD)   ? resvMTD   : []
 
@@ -49,20 +49,6 @@ async function getOverviewStats() {
     .map(([name, d]) => ({ name, count: d.count, revenue: d.revenue }))
     .sort((a, b) => b.revenue - a.revenue)
 
-  // Temporary debug — remove after confirming field names
-  const _firstResv = resvMTDArr[0] as Record<string, unknown> | undefined
-  const _debug = _firstResv ? {
-    keys: Object.keys(_firstResv),
-    revCandidates: {
-      total:        _firstResv['total'],
-      grandTotal:   _firstResv['grandTotal'],
-      balance:      _firstResv['balance'],
-      subTotal:     _firstResv['subTotal'],
-      amount:       _firstResv['amount'],
-      roomRevenue:  _firstResv['roomRevenue'],
-    },
-  } : { keys: [], revCandidates: {}, note: 'no reservations returned' }
-
   return {
     today: today(),
     occupancyToday:     occupancy,
@@ -79,7 +65,6 @@ async function getOverviewStats() {
     adr,
     revpar,
     channels,
-    _debug,
   }
 }
 

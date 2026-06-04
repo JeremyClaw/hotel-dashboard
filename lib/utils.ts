@@ -34,8 +34,9 @@ export function trendArrow(pct: number | null) {
   return '→'
 }
 
-// Cloudbeds reservation total — try grandTotal first, fall back to total
-export function resvTotal(r: { grandTotal?: string | number | null; total?: string | number | null }): number {
-  const raw = r.grandTotal ?? r.total ?? 0
+// Cloudbeds reservation revenue — field is 'balance' in getReservations list response
+// (grandTotal/total fallbacks retained for forward-compatibility)
+export function resvTotal(r: { balance?: string | number | null; grandTotal?: string | number | null; total?: string | number | null }): number {
+  const raw = r.balance ?? r.grandTotal ?? r.total ?? 0
   return parseFloat(String(raw)) || 0
 }

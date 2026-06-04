@@ -22,7 +22,7 @@ type Dash = {
   inHouse?: number
   guestsInHouse?: number
 }
-type Resv = { grandTotal?: string | number; total?: string | number; sourceName?: string }
+type Resv = { balance?: string | number; grandTotal?: string | number; total?: string | number; sourceName?: string }
 
 async function sendMessage(chatId: number, text: string) {
   if (!BOT_TOKEN) return
